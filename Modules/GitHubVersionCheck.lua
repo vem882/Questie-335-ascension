@@ -2,7 +2,7 @@
 local GitHubVersionCheck = {}
 
 -- Current version from TOC
-GitHubVersionCheck.CURRENT_VERSION = "9.5.1-ascension-v1.0.0-beta"
+GitHubVersionCheck.CURRENT_VERSION = "9.5.1-ascension-v1.0.1-beta"
 GitHubVersionCheck.GITHUB_REPO = "vem882/Questie-335-ascension"
 GitHubVersionCheck.CHECK_INTERVAL = 3600 -- Check once per hour (in seconds)
 GitHubVersionCheck.lastCheck = 0

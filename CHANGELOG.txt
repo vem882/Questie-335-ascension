@@ -1,0 +1,114 @@
+========================================
+Questie-335 Ascension Edition
+CHANGELOG
+========================================
+
+Version 9.5.1-ascension-v1.0.1-beta (December 15, 2025)
+--------------------------------------------------------
+BUG FIXES:
+  * Fixed Ascension realm detection not working on Bronzebeard server
+  * Added support for all Ascension realms:
+    - Bronzebeard
+    - Area 52
+    - Elune
+    - Rexxar
+    - Grizzly Hills
+    - Bronzebeard PTR
+  * Fixed realm name detection to be case-insensitive
+  * Fixed "/questie ascension" commands not being available
+  * Fixed detection message to display the actual realm name
+
+TECHNICAL CHANGES:
+  * Improved DetectAscensionRealm() function in Compat.lua
+  * Ascension detection now happens during PLAYER_LOGIN event
+  * Added PTR realm detection support
+
+
+Version 9.5.1-ascension-v1.0.0-beta (December 14, 2025)
+--------------------------------------------------------
+INITIAL RELEASE - Ascension WoW Support
+
+NEW FEATURES:
+  * Automatic Ascension WoW server detection
+  * Pre-loaded database with 286 Ascension NPCs from pfQuest-ascension
+  * Dynamic data collection system for NPCs, quests, and objects
+  * Custom map coordinate fixes for Ascension's Stormwind (Map ID 1519)
+  * Support for custom quests (Quest ID > 100000)
+  * Error suppression for missing Ascension custom content
+  
+NEW COMMANDS:
+  * /questie ascension stats   - Show collected data statistics
+  * /questie ascension npcs    - List discovered NPCs
+  * /questie ascension quests  - List discovered quests
+  * /questie ascension export  - Export collected data for sharing
+  * /questieversion           - Check for addon updates
+  * /qversion                 - Alias for /questieversion
+
+ENHANCEMENTS FROM QUESTIE V11.12.1:
+  * Added Expansions.lua - Automatic expansion detection via interface version
+  * Added Phasing.lua - WotLK phasing support
+  * Added DebugFunctions.lua - Enhanced debugging capabilities
+  * Added WatchFrameHook.lua - Better Blizzard quest tracker integration
+  * Fixed "game client not supported" error on custom clients
+
+NEW MODULES:
+  * AscensionLoader.lua - Main Ascension support coordinator
+  * GitHubVersionCheck.lua - Automatic version update checker
+  * Database/Ascension/ascensionNpcDB.lua - 286 pre-loaded Ascension NPCs
+  * Database/Ascension/ascensionQuestDB.lua - Custom quest data
+  * Database/Ascension/ascensionObjectDB.lua - Custom object data
+  * Database/Ascension/ascensionItemDB.lua - Custom item data
+
+BUG FIXES:
+  * Fixed Questie global nil error in Expansions.lua
+  * Fixed interface version detection for clients without WOW_PROJECT_ID
+  * Fixed coordinate offsets for custom Ascension maps
+
+BASE VERSION:
+  * Built on Questie-335 v9.5.1 by widxwer
+  * WotLK 3.3.5a (12340) client support
+  * Interface version 30300
+
+
+========================================
+CREDITS
+========================================
+
+Original Questie Team:
+  Aero, Logon, Muehe, TheCrux (BreakBB), Drejjmit, 
+  Dyaxler, Cheeq, TechnoHunter, Schaka, Zoey
+
+Questie-335 WotLK Port:
+  widxwer
+
+Ascension Adaptation (2025):
+  Bananaroot (vem882)
+
+Data Sources:
+  pfQuest-ascension by Bennylavaa and contributors
+
+Special Thanks:
+  Ascension WoW community for testing and feedback
+
+
+========================================
+REPORTING BUGS
+========================================
+
+GitHub Issues:
+  https://github.com/vem882/Questie-335-ascension/issues
+
+When reporting bugs, please include:
+  1. Realm name (e.g., "Bronzebeard")
+  2. Client version (/console gxApi)
+  3. Exact error message (/console scriptErrors 1)
+  4. Steps to reproduce
+  5. Expected vs actual behavior
+
+
+========================================
+LICENSE
+========================================
+
+GNU General Public License v3.0
+https://github.com/vem882/Questie-335-ascension/blob/main/LICENSE

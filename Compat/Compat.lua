@@ -1494,22 +1494,35 @@ function QuestieCompat.OnReloadUi(command)
 	end
 end
 
+-- Detect Ascension WoW on login (must happen early)
+local function DetectAscensionRealm()
+    local realmName = GetRealmName()
+    if realmName then
+        -- Check for Ascension realms (case-insensitive)
+        local lowerRealm = string.lower(realmName)
+        local isAscension = string.find(lowerRealm, "ascension") or
+                           string.find(lowerRealm, "bronzebeard") or
+                           string.find(lowerRealm, "area 52") or
+                           string.find(lowerRealm, "elune") or
+                           string.find(lowerRealm, "rexxar") or
+                           string.find(lowerRealm, "grizzly hills") or
+                           string.find(lowerRealm, "ptr")
+        
+        if isAscension then
+            QuestieCompat.IsAscension = true
+            DEFAULT_CHAT_FRAME:AddMessage("|cff33ffccQuestie-335:|r |cFFFFFF00Ascension WoW detected (" .. realmName .. ")! Loading Ascension database...|r")
+        end
+    end
+end
+
 -- disable builtin quest progress tooltips, re-enable on logout
 function QuestieCompat:ToggleQuestTrackingTooltips(event)
     local value = tostring(event:find("LOGOUT") and 1 or 0)
     SetCVar("showQuestTrackingTooltips", value)
     
-    -- Detect Ascension WoW on login
+    -- Detect Ascension on login
     if event == "PLAYER_LOGIN" then
-        local realmName = GetRealmName()
-        -- Ascension realms typically have "Ascension" in name or are known specific names
-        if realmName and (string.find(realmName, "Ascension") or 
-                          realmName == "Laughing Skull" or 
-                          realmName == "Sargeras" or
-                          realmName == "Andorhal") then
-            QuestieCompat.IsAscension = true
-            DEFAULT_CHAT_FRAME:AddMessage("|cff33ffccQuestie-335:|r |cFFFFFF00Ascension WoW detected! Loading Ascension database...|r")
-        end
+        DetectAscensionRealm()
     end
 end
 QuestieCompat.PLAYER_LOGIN = QuestieCompat.ToggleQuestTrackingTooltips
