@@ -24,9 +24,6 @@ function AscensionLoader:Initialize()
 
     Questie:Debug(Questie.DEBUG_INFO, "[AscensionLoader] Initializing Ascension WoW support")
 
-    -- Load Ascension databases
-    -- self:LoadDatabases()
-
     -- Apply any Ascension-specific fixes
     self:ApplyAscensionFixes()
 
@@ -34,25 +31,6 @@ function AscensionLoader:Initialize()
     self:SetupDynamicDataCollection()
 
     Questie:Debug(Questie.DEBUG_INFO, "[AscensionLoader] Ascension WoW support initialized")
-end
-
--- Load all Ascension databases
-function AscensionLoader:LoadDatabases()
-    if QuestieDB.LoadAscensionNpcData then
-        QuestieDB:LoadAscensionNpcData()
-    end
-
-    if QuestieDB.LoadAscensionQuestData then
-        QuestieDB:LoadAscensionQuestData()
-    end
-
-    if QuestieDB.LoadAscensionObjectData then
-        QuestieDB:LoadAscensionObjectData()
-    end
-
-    if QuestieDB.LoadAscensionItemData then
-        QuestieDB:LoadAscensionItemData()
-    end
 end
 
 -- Apply Ascension-specific fixes and patches

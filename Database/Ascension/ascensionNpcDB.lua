@@ -1,6 +1,3 @@
----@type QuestieDB
-local QuestieDB = QuestieLoader:ImportModule("QuestieDB")
-
 -- Ascension WoW NPC Database
 -- Converted from pfQuest-ascension format
 -- NPC data specific to Ascension WoW servers
@@ -298,37 +295,3 @@ QuestieDB.AscensionNpcDB = {
     [16786] = {"Ascension NPC 16786",100,100,55,55,0,{[139]={{80.70,59.90},{81.00,59.70}},[141]={{25.40,56.70},{25.30,56.40}},[1519]={{61.60,74.10},{61.50,74.00}},[1537]={{33.90,67.80},{29.60,61.40},{29.40,60.00}},[1657]={{39.50,46.90},{39.10,45.40}}},nil,139,nil,nil,35,nil,"",0},
     [17804] = {"Ascension NPC 17804",100,100,52,52,0,{[1519]={{74.20,90.30}}},nil,1519,nil,nil,35,"A","",0},
 }
-
--- Function to merge Ascension NPC data into main database
-function QuestieDB:LoadAscensionNpcData()
-    if not QuestieCompat.IsAscension then
-        return
-    end
-
-    -- Merge Ascension NPC data
-    for npcId, npcData in pairs(QuestieDB.AscensionNpcDB) do
-        if not QuestieDB.npcData[npcId] then
-            QuestieDB.npcData[npcId] = npcData
-        else
-            -- Merge spawns if NPC already exists
-            local spawns = npcData[QuestieDB.npcKeys.spawns]
-            if spawns then
-                local existingSpawns = QuestieDB.npcData[npcId][QuestieDB.npcKeys.spawns] or {}
-                for zoneId, coords in pairs(spawns) do
-                    if not existingSpawns[zoneId] then
-                        existingSpawns[zoneId] = coords
-                    else
-                        -- Append new coordinates
-                        for _, coord in ipairs(coords) do
-                            table.insert(existingSpawns[zoneId], coord)
-                        end
-                    end
-                end
-                QuestieDB.npcData[npcId][QuestieDB.npcKeys.spawns] = existingSpawns
-            end
-        end
-    end
-
-    DEFAULT_CHAT_FRAME:AddMessage("|cff33ffccQuestie-335:|r |cFFFFFF00Ascension NPC database loaded (" ..
-        tostring(#QuestieDB.AscensionNpcDB) .. " NPCs).|r")
-end
