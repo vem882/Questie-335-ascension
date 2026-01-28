@@ -136,30 +136,97 @@ function QuestieMap.utils:CalcHotzones(points, rangeR, count)
 end
 
 function QuestieMap.utils:IsExplored(uiMapId, x, y)
-    local IsExplored = false
-    if uiMapId then
-        local exploredAreaIDs =
-            C_MapExplorationInfo.GetExploredAreaIDsAtPosition(uiMapId,
-                                                              CreateVector2D(
-                                                                  x / 100,
-                                                                  y / 100))
-        if exploredAreaIDs then
-            IsExplored = true -- Explored
-        elseif (uiMapId == 1453) then
-            IsExplored = true -- Stormwind
-        elseif (uiMapId == 1455) then
-            IsExplored = true -- Ironforge
-        elseif (uiMapId == 1457) then
-            IsExplored = true -- Darnassus
-        elseif (uiMapId == 1458) then
-            IsExplored = true -- Undercity
-        elseif (uiMapId == 1454) then
-            IsExplored = true -- Orgrimmar
-        elseif (uiMapId == 1456) then
-            IsExplored = true -- Thunder Bluff
+    if not uiMapId then
+        return false
+    end
+
+    local C_MapExplorationInfo = rawget(_G, "C_MapExplorationInfo")
+    local CreateVector2D = rawget(_G, "CreateVector2D")
+    local GetNumMapOverlays = rawget(_G, "GetNumMapOverlays")
+    local GetMapOverlayInfo = rawget(_G, "GetMapOverlayInfo")
+    local WorldMapFrame = rawget(_G, "WorldMapFrame")
+
+    -- Some capital cities are always considered explored.
+    if (uiMapId == 1453) or (uiMapId == 1455) or (uiMapId == 1457) or (uiMapId == 1458) or (uiMapId == 1454) or (uiMapId == 1456) then
+        return true
+    end
+
+    -- Retail API (not available on 3.3.5 clients)
+    if C_MapExplorationInfo and C_MapExplorationInfo.GetExploredAreaIDsAtPosition and CreateVector2D then
+        local exploredAreaIDs = C_MapExplorationInfo.GetExploredAreaIDsAtPosition(uiMapId, CreateVector2D(x / 100, y / 100))
+        return exploredAreaIDs ~= nil
+    end
+
+    -- Classic/WotLK fallback: use explored map overlays for the *current* map.
+    -- Overlay coordinates are in a 0..1000 space, while Questie icon coords are in 0..100.
+    if not GetNumMapOverlays or not GetMapOverlayInfo then
+        return false
+    end
+
+    QuestieMap.utils._exploredOverlayCache = QuestieMap.utils._exploredOverlayCache or {}
+    local cache = QuestieMap.utils._exploredOverlayCache
+
+    local function buildRectsForCurrentMap()
+        local rects = {}
+        local count = GetNumMapOverlays() or 0
+        for i = 1, count do
+            local name, textureWidth, textureHeight, offsetX, offsetY = GetMapOverlayInfo(i)
+            if name and textureWidth and textureHeight and offsetX and offsetY then
+                rects[#rects + 1] = {
+                    left = offsetX,
+                    right = offsetX + textureWidth,
+                    top = offsetY,
+                    bottom = offsetY + textureHeight,
+                }
+            end
+        end
+        return rects
+    end
+
+    local function getCurrentUiMapIdSafe()
+        if QuestieCompat and QuestieCompat.GetCurrentUiMapID then
+            return QuestieCompat.GetCurrentUiMapID()
+        end
+        return nil
+    end
+
+    local currentUiMapId = getCurrentUiMapIdSafe()
+    local canSwitchMap = (QuestieCompat and QuestieCompat.WorldMapFrame and QuestieCompat.WorldMapFrame.SetMapID)
+        and (not (WorldMapFrame and WorldMapFrame.IsVisible and WorldMapFrame:IsVisible()))
+
+    -- Build/cache overlay rects for the correct map.
+    if cache.uiMapId ~= uiMapId then
+        if currentUiMapId == uiMapId then
+            cache.uiMapId = uiMapId
+            cache.rects = buildRectsForCurrentMap()
+        elseif canSwitchMap then
+            local previousUiMapId = currentUiMapId
+            QuestieCompat.WorldMapFrame:SetMapID(uiMapId)
+            cache.uiMapId = uiMapId
+            cache.rects = buildRectsForCurrentMap()
+            if previousUiMapId then
+                QuestieCompat.WorldMapFrame:SetMapID(previousUiMapId)
+            end
+        else
+            -- Can't safely switch maps while the world map is open; fall back to "unknown".
+            return false
         end
     end
-    return IsExplored
+
+    local rects = cache.rects
+    if not rects then
+        return false
+    end
+
+    local px = x * 10
+    local py = y * 10
+    for _, rect in pairs(rects) do
+        if px >= rect.left and px <= rect.right and py >= rect.top and py <= rect.bottom then
+            return true
+        end
+    end
+
+    return false
 end
 
 function QuestieMap.utils:MapExplorationUpdate()

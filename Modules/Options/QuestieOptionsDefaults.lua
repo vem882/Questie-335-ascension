@@ -58,6 +58,8 @@ function QuestieOptionsDefaults:Load()
             enableTooltipsNextInChain = true,
             enableMapIcons = true,
             enableMiniMapIcons = true,
+            -- Show icons at each unexplored subzone's approximate center (from ZoneDB.private.subZoneCoordinates)
+            showSubzoneMarkers = false,
             questieShutUp = false,
             bugWorkarounds = true,
             hideIconsOnContinents = false,

@@ -8,6 +8,8 @@ local QuestieOptionsUtils = QuestieLoader:ImportModule("QuestieOptionsUtils");
 local QuestieFramePool = QuestieLoader:ImportModule("QuestieFramePool");
 ---@type QuestieMap
 local QuestieMap = QuestieLoader:ImportModule("QuestieMap");
+---@type SubzoneMarkers
+local SubzoneMarkers = QuestieLoader:ImportModule("SubzoneMarkers")
 ---@type l10n
 local l10n = QuestieLoader:ImportModule("l10n")
 ---@type QuestieQuest
@@ -443,6 +445,19 @@ function QuestieOptions.tabs.icons:Initialize()
                         set = function(info, value)
                             Questie.db.profile.hideIconsOnContinents = value
                             QuestieQuest:SmoothReset()
+                        end,
+                    },
+                    showSubzoneMarkers = {
+                        type = "toggle",
+                        order = 3.6,
+                        name = function() return l10n('Show Unexplored Subzone Markers'); end,
+                        desc = function() return l10n('Show icons for unexplored subzones on the world map and minimap.'); end,
+                        width = 1.595,
+                        disabled = function() return (not Questie.db.profile.enabled); end,
+                        get = function() return Questie.db.profile.showSubzoneMarkers; end,
+                        set = function(info, value)
+                            Questie.db.profile.showSubzoneMarkers = value
+                            SubzoneMarkers:Toggle(value)
                         end,
                     },
                 },

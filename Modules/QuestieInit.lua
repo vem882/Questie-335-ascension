@@ -45,6 +45,8 @@ local QuestieEventHandler = QuestieLoader:ImportModule("QuestieEventHandler")
 local QuestieJourney = QuestieLoader:ImportModule("QuestieJourney")
 ---@type HBDHooks
 local HBDHooks = QuestieLoader:ImportModule("HBDHooks")
+---@type SubzoneMarkers
+local SubzoneMarkers = QuestieLoader:ImportModule("SubzoneMarkers")
 ---@type ChatFilter
 local ChatFilter = QuestieLoader:ImportModule("ChatFilter")
 ---@type GitHubVersionCheck
@@ -155,6 +157,8 @@ QuestieInit.Stages[1] = function() -- run as a coroutine
     MinimapIcon:Init()
 
     HBDHooks:Init()
+
+    SubzoneMarkers:Init()
 
     Questie:SetIcons()
 
@@ -402,7 +406,7 @@ function QuestieInit:Init()
     if GitHubVersionCheck then
         GitHubVersionCheck:Initialize()
     end
-    
+
     ThreadLib.ThreadError(_QuestieInit.StartStageCoroutine, Questie.db.profile.initDelay or 0, l10n("Error during initialization!"))
 
     if Questie.db.profile.trackerEnabled then
