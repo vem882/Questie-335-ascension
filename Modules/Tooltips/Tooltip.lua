@@ -26,6 +26,120 @@ QuestieTooltips.lastGametooltipCount = -1;
 QuestieTooltips.lastGametooltipType = "";
 QuestieTooltips.lastFrameName = "";
 
+_QuestieTooltips._rebuildingTooltip = false
+
+local function _StripTooltipCodes(text)
+    if not text then
+        return text
+    end
+    -- Remove common WoW formatting codes to allow simple string comparisons
+    text = text:gsub("|c%x%x%x%x%x%x%x%x", "")
+    text = text:gsub("|r", "")
+    return text
+end
+
+local function _BuildActiveQuestNameSet()
+    local questNames = {}
+    for questId, _ in pairs(QuestiePlayer.currentQuestlog or {}) do
+        local questName = QuestieDB.QueryQuestSingle(questId, "name")
+        if questName then
+            questNames[questName] = true
+        end
+    end
+    return questNames
+end
+
+local function _LooksLikeQuestProgressLine(text, activeQuestNames, allowLeadingDash)
+    if not text or text == "" then
+        return false
+    end
+
+    text = _StripTooltipCodes(text)
+
+    -- Objective progress lines are usually of the form "1/10 Something" and typically begin the line.
+    -- IMPORTANT: Don't match ratios embedded in other lines (e.g. "Durability 65/65").
+    if text:match("^%s*%d+%s*/%s*%d+%s+%S") then
+        return true
+    end
+
+    -- Some servers/clients show tooltip objectives like "   - 3/10 Something" on NPC tooltips.
+    if allowLeadingDash then
+        -- e.g. " - 3/10 Something"
+        if text:match("^%s*%-%s*%d+%s*/%s*%d+%s+%S") then
+            return true
+        end
+
+        -- e.g. " - Lashtail Raptor Slain: 11/15" (ratio at end)
+        if text:match("^%s*%-%s+.-:%s*%d+%s*/%s*%d+%s*$") then
+            return true
+        end
+
+        -- e.g. " - Something 11/15" (no colon, ratio at end)
+        if text:match("^%s*%-%s+.-%s+%d+%s*/%s*%d+%s*$") then
+            return true
+        end
+    end
+
+    -- Sometimes quest titles are shown as plain text lines
+    if activeQuestNames and activeQuestNames[text] then
+        return true
+    end
+
+    return false
+end
+
+function _QuestieTooltips:RebuildTooltipWithoutQuestTracking(tooltip)
+    if _QuestieTooltips._rebuildingTooltip then
+        return
+    end
+    if not tooltip or not tooltip.GetName or not tooltip.NumLines or not tooltip.ClearLines then
+        return
+    end
+
+    local tooltipName = tooltip:GetName()
+    if not tooltipName then
+        return
+    end
+
+    -- If we can't access the tooltip fontstrings, do nothing (avoids wiping the tooltip entirely).
+    if not _G[tooltipName .. "TextLeft1"] then
+        return
+    end
+
+    local numLines = tooltip:NumLines()
+    if not numLines or numLines <= 0 then
+        return
+    end
+
+    local activeQuestNames = _BuildActiveQuestNameSet()
+    local allowLeadingDash = false
+    if tooltip.GetUnit then
+        local _, unitToken = tooltip:GetUnit()
+        allowLeadingDash = unitToken ~= nil
+    end
+
+    -- IMPORTANT (3.3.5): Clearing the tooltip can break GetUnit()/GetItem() bindings,
+    -- which makes Questie unable to add its own tooltip lines afterwards.
+    -- So we blank only lines that look like Blizzard's quest tracking additions.
+    for i = 2, numLines do
+        local leftFS = _G[tooltipName .. "TextLeft" .. i]
+        local rightFS = _G[tooltipName .. "TextRight" .. i]
+
+        local leftText = leftFS and leftFS.GetText and leftFS:GetText() or nil
+        local strippedLeft = _StripTooltipCodes(leftText)
+
+        if _LooksLikeQuestProgressLine(strippedLeft, activeQuestNames, allowLeadingDash) then
+            if leftFS and leftFS.SetText then
+                leftFS:SetText("")
+            end
+            if rightFS and rightFS.SetText then
+                rightFS:SetText("")
+            end
+        end
+    end
+    tooltip:Show()
+end
+
 QuestieTooltips.lookupByKey = {
     --["u_Grell"] = {questid, {"Line 1", "Line 2"}}
 }
@@ -327,7 +441,12 @@ end
 
 function QuestieTooltips:Initialize()
     -- For the clicked item frame.
-    ItemRefTooltip:HookScript("OnTooltipSetItem", _QuestieTooltips.AddItemDataToTooltip)
+    ItemRefTooltip:HookScript("OnTooltipSetItem", function(self)
+        if Questie.db.profile.enableTooltips then
+            _QuestieTooltips:RebuildTooltipWithoutQuestTracking(self)
+        end
+        _QuestieTooltips.AddItemDataToTooltip(self)
+    end)
     ItemRefTooltip:HookScript("OnHide", function(self)
         if (not self.IsForbidden) or (not self:IsForbidden()) then -- do we need this here also
             QuestieTooltips.lastGametooltip = ""
@@ -346,9 +465,19 @@ function QuestieTooltips:Initialize()
             return
         end
 
+        if Questie.db.profile.enableTooltips then
+            -- Some clients/realms ignore the CVar; blank Blizzard's quest-tracking lines in-place.
+            _QuestieTooltips:RebuildTooltipWithoutQuestTracking(self)
+        end
+
         _QuestieTooltips.AddUnitDataToTooltip(self)
     end)
-    GameTooltip:HookScript("OnTooltipSetItem", _QuestieTooltips.AddItemDataToTooltip)
+    GameTooltip:HookScript("OnTooltipSetItem", function(self)
+        if Questie.db.profile.enableTooltips then
+            _QuestieTooltips:RebuildTooltipWithoutQuestTracking(self)
+        end
+        _QuestieTooltips.AddItemDataToTooltip(self)
+    end)
     GameTooltip:HookScript("OnShow", function(self)
         if QuestiePlayer.numberOfGroupMembers > MAX_GROUP_MEMBER_COUNT then
             -- When in a raid, we want as little code running as possible

@@ -122,8 +122,8 @@ _CreateOptionsTable = function()
     coroutine.yield()
     local auto_tab = QuestieOptions.tabs.auto:Initialize()
     coroutine.yield()
-    --local tooltip_tab = QuestieOptions.tabs.tooltip:Initialize()
-    --coroutine.yield()
+    local tooltip_tab = QuestieOptions.tabs.tooltip:Initialize()
+    coroutine.yield()
     --local sounds_tab = QuestieOptions.tabs.sounds:Initialize()
     --coroutine.yield()
     local nameplate_tab = QuestieOptions.tabs.nameplate:Initialize()
@@ -145,7 +145,7 @@ _CreateOptionsTable = function()
             icons_tab = icons_tab,
             tracker_tab = tracker_tab,
             auto_tab = auto_tab,
-            --tooltip_tab = tooltip_tab,
+            tooltip_tab = tooltip_tab,
             --sounds_tab = sounds_tab,
             nameplate_tab = nameplate_tab,
             dbm_hud_tab = dbm_hud_tab,
